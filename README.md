@@ -1,10 +1,107 @@
 # combinational circuits
-
+- Ripple carry adder
 - 4x1 MUx
+- 4x1 using 2x1
+- 4x1 (using 2:4 decoder & tristate buffer)
 - Operators
-- 8x3 Decoder
+- 3x8 Decoder
 - 8x3 priority encoder
 - ALU (8-bit)
+  # operators
+## [RTL]
+```bash
+
+```
+## [Test bench]
+```bash
+
+```
+# Ripple carry adder
+## [RTL]
+```bash
+module ripple_carry(a0,a1,a2,a3,b0,b1,b2,b3,c,sum0,sum1,sum2,sum3,carry);
+input a0,a1,a2,a3;
+input b0,b1,b2,b3;
+input c;
+output sum0,sum1,sum2,sum3;
+output carry;
+wire y0,y1,y2;
+fulladder FA1(.a(a0),.b(b0),.c(c),.sum(sum0),.carry(y0));
+fulladder FA2(.a(a1),.b(b1),.c(y0),.sum(sum1),.carry(y1));
+fulladder FA3(.a(a2),.b(b2),.c(y1),.sum(sum2),.carry(y2));
+fulladder FA4(.a(a3),.b(b3),.c(y2),.sum(sum3),.carry(carry));
+endmodule
+module fulladder(a,b,c,sum,carry);
+input a,b,c;
+output sum,carry;
+assign sum=(a^b^c);
+assign carry=(c&(a^b)|a&b);
+endmodule
+```
+## [Test bench]
+```bash
+module ripple_carry_tb;
+	// Inputs
+	reg a0;
+	reg a1;
+	reg a2;
+	reg a3;
+	reg b0;
+	reg b1;
+	reg b2;
+	reg b3;
+	reg c;
+	wire sum0;
+	wire sum1;
+	wire sum2;
+	wire sum3;
+	wire carry;
+   integer i,j;
+	// Instantiate the Unit Under Test (UUT)
+	ripple_carry uut (
+		.a0(a0), 
+		.a1(a1), 
+		.a2(a2), 
+		.a3(a3), 
+		.b0(b0), 
+		.b1(b1), 
+		.b2(b2), 
+		.b3(b3), 
+		.c(c), 
+		.sum0(sum0), 
+		.sum1(sum1), 
+		.sum2(sum2), 
+		.sum3(sum3), 
+		.carry(carry)
+	);
+
+	initial begin
+		a0 = 0;
+		a1 = 0;
+		a2 = 0;
+		a3 = 0;
+		b0 = 0;
+		b1 = 0;
+		b2 = 0;
+		b3 = 0;
+		c = 0;
+		#100;
+     for (i=0;i<16;i=i+1)
+	    begin
+	       {a0,a1,a2,a3}=i;
+	       #10;
+	    end 
+     for (j=0;j<16;j=j+1)
+	    begin
+	       {b0,b1,b2,b3}=j;
+	       #10;
+	    end		
+	end
+      initial $monitor(" Input a0 = %b,a1 = %b,a2 = %b,a3 =%b,b0 =%b,b1 =%b,b2 =%b,b3 =%b,c =%b, output sum0 = %b,sum1 = %b,sum2 = %b,sum3 =%b,carry=%b",a0,a1,a2,a3,b0,b1,b2,b3,c,sum0,sum1,sum2,sum3,carry);
+	initial begin #300 $finish;
+ end
+endmodule
+```
 ## 4x1 Mux
 ### [RTL]
 ```bash
@@ -73,14 +170,196 @@ module fourto1_tb;
      end 
 endmodule
 ```
-# operators
+# 4x1 Mux 2x1
 ## [RTL]
 ```bash
+module four_one_to_two_one_MUX(i0,i1,i2,i3,s1,s0,y);
+input s1,s0;
+input i0,i1,i2,i3;
+output y;
+wire y1,y2;
+ mux m1(.i0(i0),.i1(i1),.s0(s0),.y(y1));
+ mux m2(.i0(i2),.i1(i3),.s0(s0),.y(y2));
+ mux m3(.i0(y1),.i1(y2),.s0(s1),.y(y));
+
+endmodule
+module mux(y,i0,i1,s0);
+input i0,i1;
+input s0;
+output y;
+assign y=(~s0&i0)|(s0&i1);
+endmodule
 
 ```
 ## [Test bench]
 ```bash
+module four_one_to_two_one_MUX_tb();
+	reg i0;
+	reg i1;
+	reg i2;
+	reg i3;
+	reg s1;
+	reg s0;
+	wire y;
+   integer i,j;
+	four_one_to_two_one_MUX Dut (.i0(i0), .i1(i1),.i2(i2),.i3(i3),.s1(s1),
+	.s0(s0),.y(y));
+	initial begin
+		// Initialize Inputs
+		i0 = 0;
+		i1 = 0;
+		i2 = 0;
+		i3 = 0;
+		s1 = 0;
+		s0 = 0;
+		#100;
+		  for (i=0;i<16;i=i+1) 
+		 begin
+		  {i0,i1,i2,i3}=i;
+		  for (j=0;j<4;j=j+1)
+		     begin
+		  {s1,s0}=j;
+		  #10;
+		     end
+     	end
+	end
+      initial 
+      $monitor("Input i0=%b, i1=%b, i2=%b, i3=%b, s1 =%b, s0=%b, output y=%b",i0,i1,i2,i3,s1,s0,y);					
+   initial
+	#1000 $finish;	
+endmodule
+```
+ # 4x1 (using 2:4 decoder & tristate buffer)
+## [RTL]
+```bash
+module four_one_tristate(s0,s1,i0,i1,i2,i3,y);
+input i0,i1,i2,i3;
+input s0,s1;
+output y;
+wire a0,a1,a2,a3;
+wire b0,b1,b2,b3;
+decoder DEC(.a(s0),.b(s1),.y0(a0),.y1(a1),.y2(a2),.y3(a3));
+tristate T1(.in(i0),.en(a0),.y(b0));
+tristate T2(.in(i1),.en(a1),.y(b1));
+tristate T3(.in(i2),.en(a2),.y(b2));
+tristate T4(.in(i3),.en(a3),.y(b3));
+assign y=b0;
+assign y=b1;
+assign y=b2;
+assign y=b3;
+endmodule
 
+module decoder(input a,b,output y0,y1,y2,y3);
+assign y0=(~a&~b);
+assign y1=(~a&b);
+assign y2=(a&~b);
+assign y3=(a&b);
+endmodule
+
+module tristate(input in,en,output y);
+assign y=en?in:1'bz;
+endmodule
+```
+## [Test bench]
+```bash
+module four_one_tristate_tb;
+	reg s0;
+	reg s1;
+	reg i0;
+	reg i1;
+	reg i2;
+	reg i3;
+	wire y;
+   integer i,j;
+	four_one_tristate uut (
+		.s0(s0), 
+		.s1(s1), 
+		.i0(i0), 
+		.i1(i1), 
+		.i2(i2), 
+		.i3(i3), 
+		.y(y));
+	initial begin
+		// Initialize Inputs
+		s0 = 0;
+		s1 = 0;
+		i0 = 0;
+		i1 = 0;
+		i2 = 0;
+		i3 = 0;
+		#100;
+		for(i=0;i<16;i=i+1)
+		begin
+		{i0,i1,i2,i3}=i;
+		for(j=0;j<4;j=j+1)
+		begin
+		{s0,s1}=j;
+       #10;
+end
+end		 
+	end
+      initial begin
+     $monitor(" s0=%b, s1=%b,i0=%b,i1=%b,i2=%b,i3=%b, y=%b", s0,s1,i0,i1,i2,i3,y);// Add stimulus here
+	 end
+      initial begin
+	#1000 $finish;
+	end
+endmodule
+```
+# operators
+## [RTL]
+```bash
+module four_one_to_two_one_MUX(i0,i1,i2,i3,s1,s0,y);
+input s1,s0;
+input i0,i1,i2,i3;
+output y;
+wire y1,y2;
+ mux m1(.i0(i0),.i1(i1),.s0(s0),.y(y1));
+ mux m2(.i0(i2),.i1(i3),.s0(s0),.y(y2));
+ mux m3(.i0(y1),.i1(y2),.s0(s1),.y(y));
+endmodule
+module mux(y,i0,i1,s0);
+input i0,i1;
+input s0;
+output y;
+assign y=(~s0&i0)|(s0&i1);
+endmodule
+```
+## [Test bench]
+```bash
+module four_one_to_two_one_MUX_tb();
+	reg i0;
+	reg i1;
+	reg i2;
+	reg i3;
+	reg s1;
+	reg s0;
+	wire y;
+   integer i,j;
+	four_one_to_two_one_MUX Dut (.i0(i0), .i1(i1),.i2(i2),.i3(i3),.s1(s1),
+	.s0(s0),.y(y));
+	initial begin
+		i0 = 0;
+		i1 = 0;
+		i2 = 0;
+		i3 = 0;
+		s1 = 0;
+		s0 = 0;
+		#100;
+		  for (i=0;i<16;i=i+1) 
+		 begin
+		  {i0,i1,i2,i3}=i;
+		  for (j=0;j<4;j=j+1)
+		     begin
+		  {s1,s0}=j;
+		  #10;
+		     end
+     	end
+      initial 
+      $monitor("Input i0=%b, i1=%b, i2=%b, i3=%b, s1 =%b, s0=%b, output y=%b",i0,i1,i2,i3,s1,s0,y);
+   initial
+	#1000 $finish;	
+endmodule
 ```
 # Operators
 ## [RTL]
@@ -145,7 +424,7 @@ module operators_tb;
 end	 
 endmodule
 ```
-# 8X3 Decoder
+# 3x8 Decoder
 ## [RTL]
 ```bash
 module threeto8_decoder(i,en,y);

@@ -306,61 +306,6 @@ end
 	end
 endmodule
 ```
-# operators
-## [RTL]
-```bash
-module four_one_to_two_one_MUX(i0,i1,i2,i3,s1,s0,y);
-input s1,s0;
-input i0,i1,i2,i3;
-output y;
-wire y1,y2;
- mux m1(.i0(i0),.i1(i1),.s0(s0),.y(y1));
- mux m2(.i0(i2),.i1(i3),.s0(s0),.y(y2));
- mux m3(.i0(y1),.i1(y2),.s0(s1),.y(y));
-endmodule
-module mux(y,i0,i1,s0);
-input i0,i1;
-input s0;
-output y;
-assign y=(~s0&i0)|(s0&i1);
-endmodule
-```
-## [Test bench]
-```bash
-module four_one_to_two_one_MUX_tb();
-	reg i0;
-	reg i1;
-	reg i2;
-	reg i3;
-	reg s1;
-	reg s0;
-	wire y;
-   integer i,j;
-	four_one_to_two_one_MUX Dut (.i0(i0), .i1(i1),.i2(i2),.i3(i3),.s1(s1),
-	.s0(s0),.y(y));
-	initial begin
-		i0 = 0;
-		i1 = 0;
-		i2 = 0;
-		i3 = 0;
-		s1 = 0;
-		s0 = 0;
-		#100;
-		  for (i=0;i<16;i=i+1) 
-		 begin
-		  {i0,i1,i2,i3}=i;
-		  for (j=0;j<4;j=j+1)
-		     begin
-		  {s1,s0}=j;
-		  #10;
-		     end
-     	end
-      initial 
-      $monitor("Input i0=%b, i1=%b, i2=%b, i3=%b, s1 =%b, s0=%b, output y=%b",i0,i1,i2,i3,s1,s0,y);
-   initial
-	#1000 $finish;	
-endmodule
-```
 # Operators
 ## [RTL]
 ```bash

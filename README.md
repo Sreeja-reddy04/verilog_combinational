@@ -466,6 +466,7 @@ endmodule
 ```
 # 8x3 priority encoder
 ## [RTL]
+### Method 1 
 ```bash
 module priority_encoder(y0,y1,y2,IDLE,d0,d1,d2,d3,d4,d5,d6,d7,en);
 input d0,d1,d2,d3,d4,d5,d6,d7,en;
@@ -502,7 +503,9 @@ assign y1=(d7|d6|d3|d2);
 assign y2=(d7|d6|d5|d4);
 //assign valid=(d7|d6|d5|d4|d3|d2|d1|d0);
 endmodule
-
+```
+### Method 2
+```bash
 //behavioural model
 module priority_encoder(
     input  d0, d1, d2, d3, d4, d5, d6, d7,en,
@@ -542,6 +545,28 @@ always @(*) begin
 		 end
     endcase
 	 end
+end
+endmodule
+```
+### Method 3
+```bash
+module pri_enc_8to3 (
+    input  [7:0] din,
+    output reg [2:0] y,
+    output reg v
+);
+always @(*) begin
+    case (1'b1)
+        din[7]: begin y = 3'b111; v = 1; end
+        din[6]: begin y = 3'b110; v = 1; end
+        din[5]: begin y = 3'b101; v = 1; end
+        din[4]: begin y = 3'b100; v = 1; end
+        din[3]: begin y = 3'b011; v = 1; end
+        din[2]: begin y = 3'b010; v = 1; end
+        din[1]: begin y = 3'b001; v = 1; end
+        din[0]: begin y = 3'b000; v = 1; end
+        default: begin y = 3'b000; v = 0; end
+    endcase
 end
 endmodule
 ```
